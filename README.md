@@ -22,6 +22,17 @@ fēdan only listens on localhost; set `FEDAN_PASSWORD_HASH` (bcrypt) or
 `FEDAN_PASSWORD` to expose it. All settings are listed in
 [docs/design.md](docs/design.md#configuration).
 
+## Docker
+
+```sh
+docker run --rm -i ghcr.io/mdallastella/fedan hash-password   # type a password
+```
+
+Put the hash and your default destination in [compose.yaml](compose.yaml)
+(doubling every `$` in the hash), then `docker compose up -d`. Data lives in
+the `/data` volume. Images are `linux/amd64`, distroless and non-root;
+`latest` is the newest release, `main` the development branch.
+
 ## Development
 
 ```sh

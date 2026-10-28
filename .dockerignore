@@ -1,0 +1,5 @@
+.git
+.github
+*.db
+*.db-*
+fedan

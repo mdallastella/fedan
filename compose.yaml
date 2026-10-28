@@ -1,0 +1,26 @@
+services:
+  fedan:
+    image: ghcr.io/mdallastella/fedan:latest
+    build: .
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    volumes:
+      - fedan-data:/data
+    environment:
+      # Required on first start: where items tagged "main" and alerts go.
+      # Ignored afterwards; edit the default destination from the UI.
+      FEDAN_DEFAULT_URL: "ntfy://ntfy.sh/change-me"
+      # Required outside localhost. Generate with:
+      #   docker run --rm -i ghcr.io/mdallastella/fedan hash-password
+      # and double every "$" in the hash ("$$"), as compose interpolates them.
+      FEDAN_PASSWORD_HASH: "change-me"
+      # Optional, with their defaults:
+      # FEDAN_INTERVAL: "15m"
+      # FEDAN_MAX_ITEMS_PER_FETCH: "10"
+      # FEDAN_FETCH_CONCURRENCY: "4"
+      # FEDAN_RETENTION: "168h"
+      # FEDAN_LOG_FORMAT: "text"
+
+volumes:
+  fedan-data:

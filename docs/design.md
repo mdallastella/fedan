@@ -118,6 +118,11 @@ managed from the UI. Environment variables cover process-level settings only:
 
 - `slog` logs to stderr; unauthenticated `/healthz` (204 healthy, 503 if the DB
   or scheduler is down). No metrics endpoint.
-- Distribution: GitHub releases (binary) and a `linux/amd64` distroless/static,
-  non-root image on GHCR with data in `/data`, plus a compose example.
+- Distribution: GitHub releases (`linux/amd64` binary) and a `linux/amd64`
+  distroless/static, non-root image on GHCR with data in `/data`, plus a
+  compose example. Images: `latest` and `X.Y.Z`/`X.Y` for releases (tags
+  `vX.Y.Z`), `main` for the branch. Trivy gates the image: fixable
+  CRITICAL/HIGH findings block the push.
+- Subcommands: `serve` (default), `hash-password` (bcrypt hash for
+  `FEDAN_PASSWORD_HASH`), `healthcheck` (the image's health check), `version`.
 - Module `github.com/mdallastella/fedan`, MIT licence.

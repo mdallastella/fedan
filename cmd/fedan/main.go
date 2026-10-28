@@ -1,17 +1,27 @@
 // Command fedan pulls RSS/Atom feeds and pushes new items to Shoutrrr destinations.
+//
+//	fedan [serve]         run the daemon and web UI (default)
+//	fedan hash-password   read a password from stdin, print its bcrypt hash for FEDAN_PASSWORD_HASH
+//	fedan healthcheck     exit non-zero unless the local server answers /healthz
+//	fedan version         print the version
 package main
 
 import (
+	"bufio"
 	"context"
 	"errors"
 	"fmt"
 	"log/slog"
+	"net"
 	"net/http"
 	"os"
 	"os/signal"
+	"strings"
 	"sync"
 	"syscall"
 	"time"
+
+	"golang.org/x/crypto/bcrypt"
 
 	"github.com/mdallastella/fedan/internal/config"
 	"github.com/mdallastella/fedan/internal/fetch"
@@ -25,20 +35,46 @@ var version = "dev"
 
 func main() {
 	log := slog.New(slog.NewTextHandler(os.Stderr, nil))
-	if err := run(log); err != nil {
+	if err := run(os.Args[1:], log); err != nil {
 		log.Error("fatal", "err", err)
 		os.Exit(1)
 	}
 }
 
-func run(log *slog.Logger) error {
+func run(args []string, log *slog.Logger) error {
+	cmd := "serve"
+	if len(args) > 0 {
+		cmd = args[0]
+	}
+	switch cmd {
+	case "serve":
+	case "hash-password":
+		return hashPassword()
+	case "version":
+		fmt.Println(version)
+		return nil
+	case "healthcheck":
+	case "help", "-h", "--help":
+		fmt.Println("usage: fedan [serve | hash-password | healthcheck | version]")
+		return nil
+	default:
+		return fmt.Errorf("unknown command %q", cmd)
+	}
+
 	cfg, err := config.Load()
 	if err != nil {
 		return err
 	}
+	if cmd == "healthcheck" {
+		return healthcheck(cfg.Addr)
+	}
 	if cfg.LogFormat == "json" {
 		log = slog.New(slog.NewJSONHandler(os.Stderr, nil))
 	}
+	return serve(cfg, log)
+}
+
+func serve(cfg config.Config, log *slog.Logger) error {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 
@@ -112,6 +148,49 @@ func run(log *slog.Logger) error {
 	defer cancel()
 	if err := srv.Shutdown(shutdownCtx); err != nil && !errors.Is(err, http.ErrServerClosed) {
 		return err
+	}
+	return nil
+}
+
+func hashPassword() error {
+	fmt.Fprint(os.Stderr, "Password: ")
+	line, err := bufio.NewReader(os.Stdin).ReadString('\n')
+	if err != nil && line == "" {
+		return errors.New("no password read from stdin")
+	}
+	password := strings.TrimRight(line, "\r\n")
+	if password == "" {
+		return errors.New("empty password")
+	}
+	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	if err != nil {
+		return err
+	}
+	fmt.Println(string(hash))
+	return nil
+}
+
+func healthcheck(addr string) error {
+	host, port, err := net.SplitHostPort(addr)
+	if err != nil {
+		return fmt.Errorf("parse FEDAN_ADDR: %w", err)
+	}
+	if host == "" || host == "0.0.0.0" || host == "::" {
+		host = "127.0.0.1"
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, "http://"+net.JoinHostPort(host, port)+"/healthz", nil)
+	if err != nil {
+		return err
+	}
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return err
+	}
+	defer func() { _ = resp.Body.Close() }()
+	if resp.StatusCode != http.StatusNoContent {
+		return fmt.Errorf("healthz: %s", resp.Status)
 	}
 	return nil
 }

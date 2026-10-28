@@ -7,6 +7,8 @@ import (
 	"os"
 	"strconv"
 	"time"
+
+	"golang.org/x/crypto/bcrypt"
 )
 
 // Config holds the process configuration. Feeds, tags and destinations live
@@ -48,6 +50,12 @@ func Load() (Config, error) {
 		PasswordHash: os.Getenv("FEDAN_PASSWORD_HASH"),
 		Password:     os.Getenv("FEDAN_PASSWORD"),
 		LogFormat:    env("FEDAN_LOG_FORMAT", "text"),
+	}
+	if c.PasswordHash != "" {
+		if _, err := bcrypt.Cost([]byte(c.PasswordHash)); err != nil {
+			// Typically "$" signs eaten by shell or compose interpolation.
+			return c, fmt.Errorf("FEDAN_PASSWORD_HASH is not a bcrypt hash (generate one with fedan hash-password): %w", err)
+		}
 	}
 	// Without a password the UI is only reachable from this machine.
 	if c.Auth() {

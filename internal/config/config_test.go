@@ -28,3 +28,14 @@ func TestAddrWithoutPassword(t *testing.T) {
 		}
 	}
 }
+
+func TestPasswordHash(t *testing.T) {
+	t.Setenv("FEDAN_PASSWORD_HASH", "change-me")
+	if _, err := Load(); err == nil {
+		t.Error("malformed hash accepted")
+	}
+	t.Setenv("FEDAN_PASSWORD_HASH", "$2a$10$Ju6emXL8pWUeB8pEk6M3tu5cZcoYE2KOpnYsG5aMKtSXRc4qyl.LG")
+	if _, err := Load(); err != nil {
+		t.Errorf("valid hash rejected: %v", err)
+	}
+}
