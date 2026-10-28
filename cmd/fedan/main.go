@@ -11,6 +11,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/mdallastella/fedan/internal/store"
 	"github.com/mdallastella/fedan/web"
 )
 
@@ -26,9 +27,21 @@ func run(log *slog.Logger) error {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 
-	addr := os.Getenv("FEDAN_ADDR")
-	if addr == "" {
-		addr = ":8080"
+	addr := envOr("FEDAN_ADDR", ":8080")
+	dbPath := envOr("FEDAN_DB_PATH", "fedan.db")
+
+	db, err := store.Open(ctx, dbPath)
+	if err != nil {
+		return err
+	}
+	defer db.Close()
+	defaultURL := os.Getenv("FEDAN_DEFAULT_URL")
+	stored, err := store.EnsureDefaultDestination(ctx, db, defaultURL)
+	if err != nil {
+		return err
+	}
+	if defaultURL != "" && defaultURL != stored {
+		log.Warn("FEDAN_DEFAULT_URL ignored: the default destination is already configured; edit it from the UI")
 	}
 
 	mux := http.NewServeMux()
@@ -55,4 +68,11 @@ func run(log *slog.Logger) error {
 		return err
 	}
 	return nil
+}
+
+func envOr(key, fallback string) string {
+	if v := os.Getenv(key); v != "" {
+		return v
+	}
+	return fallback
 }
