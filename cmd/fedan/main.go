@@ -17,7 +17,7 @@ import (
 	"github.com/mdallastella/fedan/internal/fetch"
 	"github.com/mdallastella/fedan/internal/send"
 	"github.com/mdallastella/fedan/internal/store"
-	"github.com/mdallastella/fedan/web"
+	"github.com/mdallastella/fedan/internal/ui"
 )
 
 // version is set at build time with -ldflags "-X main.version=...".
@@ -70,13 +70,30 @@ func run(log *slog.Logger) error {
 	var workers sync.WaitGroup
 	workers.Go(func() { fetcher.Run(ctx) })
 	workers.Go(func() { sender.Run(ctx) })
+	workers.Go(func() { store.RunPrune(ctx, db, log, cfg.Retention) })
 	defer workers.Wait()
 
+	sessionKey, err := store.Secret(ctx, db, "session_key", 32)
+	if err != nil {
+		return err
+	}
+	web, err := ui.New(db, log, cfg, fetcher, sender, version, []byte(sessionKey))
+	if err != nil {
+		return err
+	}
+	if !cfg.Auth() {
+		log.Warn("no FEDAN_PASSWORD_HASH or FEDAN_PASSWORD set: the UI is open, listening on loopback only")
+	}
+
 	mux := http.NewServeMux()
-	mux.HandleFunc("GET /healthz", func(w http.ResponseWriter, _ *http.Request) {
+	mux.HandleFunc("GET /healthz", func(w http.ResponseWriter, r *http.Request) {
+		if err := db.PingContext(r.Context()); err != nil {
+			w.WriteHeader(http.StatusServiceUnavailable)
+			return
+		}
 		w.WriteHeader(http.StatusNoContent)
 	})
-	mux.Handle("GET /", http.FileServerFS(web.Static()))
+	mux.Handle("/", web.Handler())
 
 	srv := &http.Server{Addr: cfg.Addr, Handler: mux, ReadHeaderTimeout: 10 * time.Second}
 	errc := make(chan error, 1)

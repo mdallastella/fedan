@@ -34,14 +34,14 @@ managed from the UI. Environment variables cover process-level settings only:
 
 | Variable | Default | Purpose |
 |---|---|---|
-| `FEDAN_ADDR` | `:8080` | listen address |
+| `FEDAN_ADDR` | `:8080`, or `127.0.0.1:8080` without a password | listen address (must be loopback without a password) |
 | `FEDAN_DB_PATH` | `fedan.db` (`/data/fedan.db` in the image) | SQLite file |
 | `FEDAN_DEFAULT_URL` | — | default destination, first start only |
 | `FEDAN_PASSWORD_HASH` / `FEDAN_PASSWORD` | — | UI password (bcrypt hash preferred) |
 | `FEDAN_INTERVAL` | `15m` | polling interval for all feeds |
 | `FEDAN_MAX_ITEMS_PER_FETCH` | `10` | cap on new items per feed per cycle |
 | `FEDAN_FETCH_CONCURRENCY` | `4` | parallel fetches |
-| `FEDAN_RETENTION` | `168h` | item/delivery history retention |
+| `FEDAN_RETENTION` | `168h` | item/delivery history retention (at least `24h`, the retry window) |
 | `FEDAN_LOG_FORMAT` | `text` | `text` or `json` |
 
 ## Fetching

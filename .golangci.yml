@@ -11,6 +11,11 @@ linters:
     - revive
     - unconvert
   settings:
+    gosec:
+      excludes:
+        # Queries concatenate only constant clauses and "?" placeholders;
+        # values are always bound parameters.
+        - G202
     errcheck:
       # Closing read-only handles has no actionable error.
       exclude-functions:

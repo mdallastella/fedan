@@ -1,0 +1,54 @@
+{{define "content"}}
+{{with .Data}}
+<section class="stats">
+  <article><strong>{{.Feeds}}</strong>feeds</article>
+  <article><strong>{{.Erroring}}</strong>with errors</article>
+  <article><strong>{{.Disabled}}</strong>disabled</article>
+  <article><strong>{{.Unrouted}}</strong>routed nowhere</article>
+  <article><strong>{{.Pending}}</strong>pending</article>
+  <article><strong>{{.Failed}}</strong><a href="/deliveries">failed</a></article>
+</section>
+
+{{if .FailingDestinations}}
+<section>
+  <h3>Failing destinations</h3>
+  <ul>{{range .FailingDestinations}}<li><a href="/destinations/{{.ID}}">{{.Name}}</a>, failing since {{ago .FailingSince}}</li>{{end}}</ul>
+</section>
+{{end}}
+
+{{if .Problems}}
+<section>
+  <h3>Feeds needing attention</h3>
+  <table>
+    <thead><tr><th>Feed</th><th>Status</th><th>Problem</th></tr></thead>
+    <tbody>{{range .Problems}}
+      <tr><td><a href="/feeds/{{.ID}}">{{.Name}}</a></td><td><span class="st {{status .Status}}">{{.Status}}</span></td>
+      <td class="wrap">{{if .Enabled}}{{.LastError}} ({{.ErrorCount}}×){{else}}{{.DisabledReason}}{{end}}</td></tr>
+    {{end}}</tbody>
+  </table>
+</section>
+{{end}}
+
+<section>
+  <h3>Recent deliveries</h3>
+  {{template "deliveries" .Recent}}
+</section>
+{{end}}
+{{end}}
+
+{{define "deliveries"}}
+{{if .}}
+<table>
+  <thead><tr><th>Item</th><th>Feed</th><th>Destination</th><th>Status</th><th>When</th></tr></thead>
+  <tbody>{{range .}}
+    <tr>
+      <td class="wrap">{{if .Link}}<a href="{{.Link}}" target="_blank" rel="noopener">{{.ItemTitle}}</a>{{else}}{{.ItemTitle}}{{end}}</td>
+      <td><a href="/feeds/{{.FeedID}}">{{.FeedTitle}}</a></td>
+      <td><a href="/destinations/{{.DestinationID}}">{{.Destination}}</a></td>
+      <td><span class="st {{status .Status}}" {{with .LastError}}title="{{.}}"{{end}}>{{.Status}}</span></td>
+      <td>{{if eq .Status "sent"}}{{ago .SentAt}}{{else}}{{ago .CreatedAt}}{{end}}</td>
+    </tr>
+  {{end}}</tbody>
+</table>
+{{else}}<p class="muted">Nothing delivered yet.</p>{{end}}
+{{end}}

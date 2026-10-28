@@ -5,6 +5,7 @@ go 1.27.3
 require (
 	github.com/mmcdole/gofeed v1.5.0
 	github.com/nicholas-fedor/shoutrrr v0.22.1
+	golang.org/x/net v0.61.0
 	modernc.org/sqlite v1.61.0
 )
 
@@ -20,7 +21,6 @@ require (
 	github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec // indirect
 	golang.org/x/crypto v0.58.0 // indirect
 	golang.org/x/mod v0.42.0 // indirect
-	golang.org/x/net v0.61.0 // indirect
 	golang.org/x/sync v0.24.0 // indirect
 	golang.org/x/sys v0.49.0 // indirect
 	golang.org/x/term v0.47.0 // indirect

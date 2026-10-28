@@ -10,6 +10,18 @@ new items to one or more destinations (Telegram, ntfy, Matrix, email, webhooks, 
 
 See [docs/design.md](docs/design.md) for the design decisions.
 
+## Quick start
+
+```sh
+make build
+FEDAN_DEFAULT_URL='ntfy://ntfy.sh/your-topic' ./fedan
+```
+
+Open http://127.0.0.1:8080, add feeds and destinations. Without a password
+fēdan only listens on localhost; set `FEDAN_PASSWORD_HASH` (bcrypt) or
+`FEDAN_PASSWORD` to expose it. All settings are listed in
+[docs/design.md](docs/design.md#configuration).
+
 ## Development
 
 ```sh

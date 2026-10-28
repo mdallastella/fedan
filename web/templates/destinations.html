@@ -1,0 +1,15 @@
+{{define "content"}}
+<div class="actions"><h2>Destinations</h2><a href="/destinations/new" role="button">New destination</a></div>
+<table>
+  <thead><tr><th>Name</th><th>URL</th><th>Tags</th><th>Status</th><th>Sent / failed</th></tr></thead>
+  <tbody>{{range .Data}}
+    <tr>
+      <td><a href="/destinations/{{.ID}}">{{.Name}}</a>{{if .IsDefault}} <mark class="tag">default</mark>{{end}}</td>
+      <td><code>{{mask .URL}}</code></td>
+      <td>{{template "tags" .Tags}}</td>
+      <td>{{if .FailingSince.Valid}}<span class="st bad">failing since {{ago .FailingSince}}</span>{{else}}<span class="st ok">ok</span>{{end}}</td>
+      <td>{{.Sent}} / {{.Failed}}</td>
+    </tr>
+  {{end}}</tbody>
+</table>
+{{end}}

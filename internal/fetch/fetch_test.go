@@ -386,3 +386,33 @@ func TestItemKey(t *testing.T) {
 		t.Errorf("keys = %v", keys)
 	}
 }
+
+func TestDiscover(t *testing.T) {
+	e := newEnv(t)
+	mux := http.NewServeMux()
+	mux.HandleFunc("/blog/", func(w http.ResponseWriter, _ *http.Request) {
+		_, _ = io.WriteString(w, `<!doctype html><html><head><title>Blog</title>
+			<link rel="stylesheet" href="/style.css">
+			<link rel="alternate" type="application/atom+xml" href="../feed.xml">
+			</head><body></body></html>`)
+	})
+	mux.HandleFunc("/feed.xml", func(w http.ResponseWriter, _ *http.Request) { _, _ = io.WriteString(w, rss(1)) })
+	mux.HandleFunc("/plain", func(w http.ResponseWriter, _ *http.Request) {
+		_, _ = io.WriteString(w, "<html><body>nothing</body></html>")
+	})
+	srv := httptest.NewServer(mux)
+	defer srv.Close()
+
+	for _, in := range []string{srv.URL + "/blog/", srv.URL + "/feed.xml"} {
+		u, title, err := e.f.Discover(t.Context(), in)
+		if err != nil || u != srv.URL+"/feed.xml" || title != "Test" {
+			t.Errorf("Discover(%s) = %q, %q, %v", in, u, title, err)
+		}
+	}
+	if _, _, err := e.f.Discover(t.Context(), srv.URL+"/plain"); err == nil {
+		t.Error("page without feed discovered something")
+	}
+	if _, _, err := e.f.Discover(t.Context(), "ftp://example.com"); err == nil {
+		t.Error("ftp URL accepted")
+	}
+}

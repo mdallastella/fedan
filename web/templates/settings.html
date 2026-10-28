@@ -1,0 +1,19 @@
+{{define "content"}}
+<h2>OPML</h2>
+<p>Import adds every feed of the file tagged <code>main</code> plus its folders and categories. Feeds already present are skipped,
+  and the first fetch of each imported feed sends nothing.</p>
+<form method="post" action="/opml" enctype="multipart/form-data" hx-boost="false">
+  <fieldset role="group">
+    <input type="file" name="file" accept=".opml,.xml,text/x-opml,application/xml" required aria-label="OPML file">
+    <button>Import</button>
+  </fieldset>
+</form>
+<p><a href="/opml" hx-boost="false" role="button" class="secondary">Export OPML</a></p>
+
+<h2>Configuration</h2>
+<p class="muted">Set through environment variables; restart to change.</p>
+<table>
+  <thead><tr><th>Setting</th><th>Variable</th><th>Value</th></tr></thead>
+  <tbody>{{range .Data}}<tr><td>{{.Name}}</td><td><code>{{.Env}}</code></td><td>{{.Value}}</td></tr>{{end}}</tbody>
+</table>
+{{end}}

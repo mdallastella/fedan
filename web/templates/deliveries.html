@@ -1,0 +1,38 @@
+{{define "content"}}
+{{with .Data}}
+<div class="actions">
+  <h2>Failed</h2>
+  {{if .Failed}}<form method="post" action="/deliveries/retry-failed"><button class="secondary">Retry all</button></form>{{end}}
+</div>
+{{if .Failed}}
+<table>
+  <thead><tr><th>Item</th><th>Destination</th><th>Error</th><th>Attempts</th><th></th></tr></thead>
+  <tbody>{{range .Failed}}
+    <tr>
+      <td class="wrap">{{if .Link}}<a href="{{.Link}}" target="_blank" rel="noopener">{{.ItemTitle}}</a>{{else}}{{.ItemTitle}}{{end}}<br><small><a href="/feeds/{{.FeedID}}">{{.FeedTitle}}</a></small></td>
+      <td><a href="/destinations/{{.DestinationID}}">{{.Destination}}</a></td>
+      <td class="wrap"><small>{{.LastError}}</small></td>
+      <td>{{.Attempts}}</td>
+      <td><form method="post" action="/deliveries/{{.ID}}/retry"><button class="secondary">Retry</button></form></td>
+    </tr>
+  {{end}}</tbody>
+</table>
+{{else}}<p class="muted">No failed deliveries.</p>{{end}}
+
+<h2>Pending</h2>
+{{if .Pending}}
+<table>
+  <thead><tr><th>Item</th><th>Destination</th><th>Attempts</th><th>Next attempt</th><th>Last error</th></tr></thead>
+  <tbody>{{range .Pending}}
+    <tr>
+      <td class="wrap">{{.ItemTitle}}<br><small><a href="/feeds/{{.FeedID}}">{{.FeedTitle}}</a></small></td>
+      <td><a href="/destinations/{{.DestinationID}}">{{.Destination}}</a></td>
+      <td>{{.Attempts}}</td>
+      <td>{{ago .NextAttemptAt}}</td>
+      <td class="wrap"><small>{{.LastError}}</small></td>
+    </tr>
+  {{end}}</tbody>
+</table>
+{{else}}<p class="muted">Nothing waiting to be sent.</p>{{end}}
+{{end}}
+{{end}}

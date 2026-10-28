@@ -355,3 +355,10 @@ func truncate(s string, n int) string {
 	r := []rune(s)
 	return string(r[:max(n-1, 0)]) + "…"
 }
+
+// Send delivers a message to url right away, bypassing the outbox.
+func (s *Sender) Send(ctx context.Context, url string, msg Message) error {
+	sendCtx, cancel := context.WithTimeout(ctx, sendTimeout)
+	defer cancel()
+	return s.send(sendCtx, url, msg.Title, msg.Body)
+}

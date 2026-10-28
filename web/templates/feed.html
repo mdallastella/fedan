@@ -1,0 +1,51 @@
+{{define "content"}}
+{{with .Data}}{{with .Feed}}
+<hgroup>
+  <h2 class="wrap">{{.Name}}</h2>
+  <p class="wrap"><a href="{{.URL}}" target="_blank" rel="noopener">{{.URL}}</a>{{with .SiteURL}} · <a href="{{.}}" target="_blank" rel="noopener">website</a>{{end}}</p>
+</hgroup>
+
+<p>
+  <span class="st {{status .Status}}">{{.Status}}</span>
+  Last fetch {{ago .LastFetchedAt}}, last success {{ago .LastSuccessAt}}{{if .Enabled}}, next {{ago .NextFetchAt}}{{end}}.
+</p>
+{{if not .Enabled}}<p class="error">Disabled: {{.DisabledReason}}</p>
+{{else if .LastError}}<p class="error">Last error ({{.ErrorCount}}×): {{.LastError}}</p>{{end}}
+{{if eq .Routes 0}}<p class="error">This feed is routed nowhere: no destination subscribes to its tags. Its items are stored but not sent.</p>{{end}}
+
+<div class="actions">
+  <form method="post" action="/feeds/{{.ID}}/fetch"><button>Fetch now</button></form>
+  <form method="post" action="/feeds/{{.ID}}/send-latest"><button class="secondary">Send latest item</button></form>
+  {{if .Enabled}}
+  <form method="post" action="/feeds/{{.ID}}/disable"><button class="secondary">Disable</button></form>
+  {{else}}
+  <form method="post" action="/feeds/{{.ID}}/enable"><button class="secondary">Enable</button></form>
+  {{end}}
+  <form method="post" action="/feeds/{{.ID}}/delete" hx-confirm="Delete this feed and its history?"><button class="contrast">Delete</button></form>
+</div>
+
+<h3>Tags</h3>
+<form method="post" action="/feeds/{{.ID}}/tags">
+  <fieldset role="group">
+    <input name="tags" value="{{join .Tags " "}}" aria-label="Tags">
+    <button>Save tags</button>
+  </fieldset>
+</form>
+{{end}}
+<small class="muted">{{with .AllTags}}Existing tags: {{join . ", "}}.{{end}}</small>
+
+<h3>Recent items</h3>
+{{if .Items}}
+<table>
+  <thead><tr><th>Item</th><th>Published</th><th>Deliveries</th></tr></thead>
+  <tbody>{{range .Items}}
+    <tr>
+      <td class="wrap">{{if .Link}}<a href="{{.Link}}" target="_blank" rel="noopener">{{or .Title .Link}}</a>{{else}}{{.Title}}{{end}}</td>
+      <td>{{if .PublishedAt.Valid}}{{ago .PublishedAt}}{{else}}seen {{ago .CreatedAt}}{{end}}</td>
+      <td>{{range .Deliveries}}<span class="st {{status .Status}}" title="{{.Destination}}{{with .LastError}}: {{.}}{{end}}">{{.Destination}}</span> {{else}}<span class="muted">none</span>{{end}}</td>
+    </tr>
+  {{end}}</tbody>
+</table>
+{{else}}<p class="muted">No items in the history.</p>{{end}}
+{{end}}
+{{end}}

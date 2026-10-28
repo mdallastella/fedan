@@ -1,0 +1,33 @@
+/* Small additions to Pico classless. */
+body > header nav { padding-block: 0; }
+body > header nav ul:first-child strong { font-size: 1.25rem; }
+nav a[aria-current="page"] { font-weight: 700; text-decoration: underline; }
+nav form { margin: 0; }
+nav form button { padding: .25rem .75rem; margin: 0; }
+main > .notice, main > .error { padding: .75rem 1rem; border-radius: var(--pico-border-radius); }
+main > .notice { background: var(--pico-ins-color); color: #fff; }
+main > .error, .preview .error { background: var(--pico-del-color); color: #fff; padding: .5rem .75rem; border-radius: var(--pico-border-radius); }
+.tag { padding: .05rem .45rem; border-radius: 1rem; font-size: .8rem; margin-right: .2rem; white-space: nowrap; }
+.st { padding: .05rem .5rem; border-radius: 1rem; font-size: .8rem; white-space: nowrap; color: #fff; }
+.st.ok { background: #2e7d32; }
+.st.bad { background: #c62828; }
+.st.wait { background: #9e7700; }
+.muted { color: var(--pico-muted-color); }
+.actions { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; }
+.actions form { margin: 0; }
+.actions button, td form button { width: auto; margin: 0; padding: .3rem .8rem; font-size: .9rem; }
+td form { margin: 0; }
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(7rem, 1fr)); gap: 1rem; }
+.stats article { margin: 0; text-align: center; padding: 1rem; }
+.stats strong { display: block; font-size: 1.8rem; }
+.wrap { overflow-wrap: anywhere; }
+.preview pre { white-space: pre-wrap; }
+textarea { font-family: var(--pico-font-family-monospace); }
+.htmx-request button { opacity: .6; }
+button, [role="button"] { white-space: nowrap; }
+button.secondary, [role="button"].secondary { background: var(--pico-secondary-background); border-color: var(--pico-secondary-border); color: var(--pico-secondary-inverse); }
+button.contrast { background: #c62828; border-color: #c62828; color: #fff; }
+table { display: block; overflow-x: auto; }
+@media (min-width: 768px) { table { display: table; } }
+body > header nav, body > header nav ul { flex-wrap: wrap; }
+@media (max-width: 767px) { body > header nav ul li { padding-block: .4rem; } }

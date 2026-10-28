@@ -1,0 +1,53 @@
+{{define "content"}}
+{{with .Data}}
+<h2>{{if .New}}New destination{{else}}{{.Name}}{{if .IsDefault}} <mark class="tag">default</mark>{{end}}{{end}}</h2>
+<form method="post" action="{{if .New}}/destinations{{else}}/destinations/{{.ID}}{{end}}" id="destination">
+  <input type="hidden" name="id" value="{{.ID}}">
+  <label>Name <input name="name" value="{{.Name}}" required></label>
+  <label>Shoutrrr URL
+    <input name="url" autocomplete="off" {{if .New}}required placeholder="telegram://token@telegram?chats=@channel"{{else}}placeholder="{{mask .URL}} (leave empty to keep)"{{end}}>
+    <small>See the <a href="https://shoutrrr.nickfedor.com/services/overview/" target="_blank" rel="noopener">supported services</a>. The URL holds credentials: it is never shown again.</small>
+  </label>
+  <label>Subscribed tags
+    <input name="tags" value="{{.TagInput}}">
+    <small>Items from feeds with any of these tags are sent here.{{if .IsDefault}} The default destination always keeps <code>main</code>.{{end}}
+      {{with .AllTags}}Existing: {{join . ", "}}.{{end}}</small>
+  </label>
+  <label>Title template <input name="title_template" value="{{.TitleTemplate}}"></label>
+  <label>Body template
+    <textarea name="body_template" rows="4">{{.BodyTemplate}}</textarea>
+    <small>Go templates. Fields: <code>{{"{{.Feed.Title}}"}}</code>, <code>{{"{{.Feed.SiteURL}}"}}</code>,
+      <code>{{"{{.Item.Title}}"}}</code>, <code>{{"{{.Item.Link}}"}}</code>, <code>{{"{{.Item.Summary}}"}}</code>,
+      <code>{{"{{.Item.Published.Format \"2006-01-02\"}}"}}</code>, <code>{{"{{range .Tags}}#{{.}} {{end}}"}}</code>.</small>
+  </label>
+  <div class="grid">
+    <label>Format
+      <select name="format">{{$f := .Format}}{{range .Formats}}<option {{if eq . $f}}selected{{end}}>{{.}}</option>{{end}}</select>
+      <small>The item summary is converted to this format.</small>
+    </label>
+    <label>Max length <input type="number" name="max_length" min="0" value="{{.MaxLength}}"><small>Body characters, 0 for no limit.</small></label>
+  </div>
+  <div class="actions">
+    <button>Save</button>
+    <button type="button" class="secondary" hx-post="/destinations/preview" hx-include="#destination" hx-target="#preview">Preview</button>
+    <button type="button" class="secondary" hx-post="/destinations/test" hx-include="#destination" hx-target="#preview">Send test</button>
+  </div>
+</form>
+<div id="preview" class="preview" aria-live="polite"></div>
+{{if and (not .New) (not .IsDefault)}}
+<form method="post" action="/destinations/{{.ID}}/delete" hx-confirm="Delete this destination and its delivery history?">
+  <button class="contrast">Delete destination</button>
+</form>
+{{end}}
+{{end}}
+{{end}}
+
+{{define "preview"}}
+<article>
+  {{if .Error}}<p class="error">{{.Error}}</p>{{else}}
+  <header>{{if .Sent}}✓ Sent. {{end}}Rendered with {{.Source}}.</header>
+  <p><strong>{{.Message.Title}}</strong></p>
+  <pre>{{.Message.Body}}</pre>
+  {{end}}
+</article>
+{{end}}
