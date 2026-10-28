@@ -11,7 +11,8 @@ embedded with `go:embed`.
 - Routing is **by tag only**: feeds carry tags, destinations subscribe to tags.
   There are no direct feed → destination links.
 - An item reaches each destination at most once, even when several of its
-  feed's tags lead there.
+  feed's tags lead there. An article (same link) already delivered to a
+  destination from another feed is not delivered again.
 - Every new (or imported) feed gets the `main` tag. It is removable; a feed with
   no tags is still fetched and stored, and the UI warns that it routes nowhere.
 - Tags are free-form lowercase slugs, created on first use. Any destination may
@@ -47,8 +48,8 @@ managed from the UI. Environment variables cover process-level settings only:
 
 - One global interval with jitter; no per-feed or adaptive intervals.
 - Conditional GET (`ETag` / `Last-Modified`), honour `Cache-Control: max-age`
-  and `Retry-After`/429, exponential backoff on repeated errors (reset on
-  success).
+  and `Retry-After`/429, exponential backoff on repeated errors (interval
+  doubling, capped at 6h; reset on success).
 - 30s timeout, 10 MB body cap, `User-Agent: fedan/<version> (+https://github.com/mdallastella/fedan)`,
   up to 5 redirects. No private-address blocking (LAN feeds are legitimate).
 - 301/308: the stored feed URL is rewritten. 410, or 404 for more than 7 days:
