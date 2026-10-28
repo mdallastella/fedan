@@ -4,6 +4,7 @@ package main
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log/slog"
 	"net/http"
 	"os"
@@ -14,6 +15,7 @@ import (
 
 	"github.com/mdallastella/fedan/internal/config"
 	"github.com/mdallastella/fedan/internal/fetch"
+	"github.com/mdallastella/fedan/internal/send"
 	"github.com/mdallastella/fedan/internal/store"
 	"github.com/mdallastella/fedan/web"
 )
@@ -45,6 +47,11 @@ func run(log *slog.Logger) error {
 		return err
 	}
 	defer db.Close()
+	if cfg.DefaultURL != "" {
+		if err := send.Validate(cfg.DefaultURL); err != nil {
+			return fmt.Errorf("FEDAN_DEFAULT_URL: %w", err)
+		}
+	}
 	stored, err := store.EnsureDefaultDestination(ctx, db, cfg.DefaultURL)
 	if err != nil {
 		return err
@@ -53,7 +60,8 @@ func run(log *slog.Logger) error {
 		log.Warn("FEDAN_DEFAULT_URL ignored: the default destination is already configured; edit it from the UI")
 	}
 
-	fetcher := fetch.New(db, log, logAlerter{log}, fetch.Options{
+	sender := send.New(db, log, send.Shoutrrr)
+	fetcher := fetch.New(db, log, sender, fetch.Options{
 		Interval:    cfg.Interval,
 		MaxItems:    cfg.MaxItemsPerFetch,
 		Concurrency: cfg.FetchConcurrency,
@@ -61,6 +69,7 @@ func run(log *slog.Logger) error {
 	})
 	var workers sync.WaitGroup
 	workers.Go(func() { fetcher.Run(ctx) })
+	workers.Go(func() { sender.Run(ctx) })
 	defer workers.Wait()
 
 	mux := http.NewServeMux()
@@ -88,12 +97,4 @@ func run(log *slog.Logger) error {
 		return err
 	}
 	return nil
-}
-
-// logAlerter logs alerts until the sender can deliver them to the default
-// destination.
-type logAlerter struct{ log *slog.Logger }
-
-func (a logAlerter) Alert(_ context.Context, title, body string) {
-	a.log.Warn("alert", "title", title, "body", body)
 }

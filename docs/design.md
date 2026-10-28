@@ -74,8 +74,10 @@ managed from the UI. Environment variables cover process-level settings only:
   worker sends.
 - Retries with exponential backoff (1m doubling, capped at 1h) for up to 24h,
   then `failed`. Failed deliveries can be retried from the UI.
-- When a destination starts failing, and when it recovers, one alert goes to
-  the default destination. Failures of the default destination itself are only
+- When a destination has been failing for 5 minutes, and later when it
+  recovers, one alert goes to the default destination (shorter glitches alert
+  neither). A template error fails the delivery at once without retries and
+  does not count against the destination. Failures of the default destination itself are only
   logged and shown in the UI.
 
 ### Message format
